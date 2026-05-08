@@ -40,3 +40,4 @@ lastpage
 geometry
 gloss-russian
 babel-russian
+lua-uni-data

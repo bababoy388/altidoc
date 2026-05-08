@@ -4,6 +4,7 @@ set MIKTEX=miktex
 
 for /f "usebackq delims=" %%p in ("latex_packages.txt") do (
     echo Установка %%p...
-    "%MIKTEX%" --yes --install-package %%p
+    "%MIKTEX%" --admin packages install %%p
 )
 echo Готово.
+pause
