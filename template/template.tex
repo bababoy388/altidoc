@@ -1,0 +1,355 @@
+% !TeX program = lualatex
+\documentclass[${Format}]{article}
+\usepackage{polyglossia}
+\setdefaultlanguage{russian}
+\usepackage{fontspec}
+\setmainfont{GOST_A.TTF}[
+  Path = ${TemplatePath}/,
+  Extension = .ttf
+]
+\setsansfont{GOST_A.TTF}[
+  Path = ${TemplatePath}/,
+  Extension = .ttf
+]
+\setmonofont{GOST_A.TTF}[
+  Path = ${TemplatePath}/,
+  Extension = .ttf
+]
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{calc}
+\usepackage{rotating}
+\usepackage[unicode,hidelinks]{hyperref}
+\usepackage{eso-pic}
+\usepackage{tabularx}
+\usepackage{lastpage}
+
+% Поля: левое = 11.5 мм, верх = 0, правое = 10 мм, низ = 0 мм
+\usepackage[top=0mm, bottom=0mm, left=11.5mm, right=10mm,
+            headheight=0pt, headsep=0pt, includehead=false]{geometry}
+\pagestyle{empty}
+
+% ===== Базовый отступ 15 мм для всех страниц =====
+\addtolength{\textheight}{-15mm}
+
+% Жирная рамка
+\setlength{\arrayrulewidth}{1pt}
+\newcolumntype{|}{!{\vrule width \arrayrulewidth}}
+
+% Отступы в ячейках
+\setlength{\tabcolsep}{2mm}
+\renewcommand{\arraystretch}{2.0}
+\setlength{\LTpre}{0mm}
+\setlength{\LTpost}{0mm}
+
+% Исходный курсивный шрифт (для основных таблиц)
+\newcommand{\ESKDfontTabHead}{\normalfont\itshape\fontsize{10}{12}\selectfont}
+\newcommand{\ESKDfontTabBody}{\normalfont\itshape\fontsize{10}{12}\selectfont}
+\renewcommand{\textbf}[1]{{\bfseries\itshape #1}}
+
+% ===== Вертикальный штамп (левый) =====
+\newlength{\stampheight}
+\setlength{\stampheight}{0.5\textheight}
+\newlength{\stampwidth}
+\setlength{\stampwidth}{10.5mm}
+\newlength{\colwidth}
+\setlength{\colwidth}{3.75mm}
+
+\AddToShipoutPictureBG{%
+  \ifnum\value{page}=1
+    \put(1mm, 6mm){%
+      \begin{picture}(\stampwidth, \stampheight)
+        \thicklines
+        \put(0,0){\framebox(\stampwidth, \stampheight){}}
+        \put(\colwidth, 0){\line(0,1){\stampheight}}
+        \put(0, 0.2\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.4\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.6\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.8\stampheight){\line(1,0){\stampwidth}}
+        \put(0.5\colwidth, 0.1\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Инв. № Подл.}}}}
+        \put(0.5\colwidth, 0.3\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Подп. и дата}}}}
+        \put(0.5\colwidth, 0.5\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Взам. инв. №}}}}
+        \put(0.5\colwidth, 0.7\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Инв. № дубл.}}}}
+        \put(0.5\colwidth, 0.9\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Подп и. дата}}}}
+      \end{picture}%
+    }%
+  \else
+    \put(1mm, 4mm){%
+      \begin{picture}(\stampwidth, \stampheight)
+        \thicklines
+        \put(0,0){\framebox(\stampwidth, \stampheight){}}
+        \put(\colwidth, 0){\line(0,1){\stampheight}}
+        \put(0, 0.2\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.4\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.6\stampheight){\line(1,0){\stampwidth}}
+        \put(0, 0.8\stampheight){\line(1,0){\stampwidth}}
+        \put(0.5\colwidth, 0.1\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Инв. № Подл.}}}}
+        \put(0.5\colwidth, 0.3\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Подп. и дата}}}}
+        \put(0.5\colwidth, 0.5\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Взам. инв. №}}}}
+        \put(0.5\colwidth, 0.7\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Инв. № дубл.}}}}
+        \put(0.5\colwidth, 0.9\stampheight){\makebox(0,0){\rotatebox{90}{\textbf{\ESKDfontTabHead Подп и. дата}}}}
+      \end{picture}%
+    }%
+  \fi
+}
+
+% ===== ШИРИНЫ ТАБЛИЦ ДЛЯ БЛОКА КВАДРАТИКОВ =====
+\newlength{\billblockwidth}
+\setlength{\billblockwidth}{\dimexpr 19mm + 109mm + 6mm + 44mm + 3\arrayrulewidth + 6\tabcolsep\relax}
+
+\newlength{\specblockwidth}
+\setlength{\specblockwidth}{\dimexpr 5mm + 5mm + 69mm + 63mm + 9mm + 21mm + 5\arrayrulewidth + 10\tabcolsep\relax}
+
+\newlength{\purchaseblockwidth}
+\setlength{\purchaseblockwidth}{\dimexpr 6mm + 58.5mm + 44mm + 69mm + 54mm + 69mm + 15mm + 15mm + 15mm + 15mm + 23mm + 10\arrayrulewidth + 20\tabcolsep\relax}
+
+% ===== Общие длины для расчёта ячеек =====
+\newlength{\Pcol}
+\newlength{\Xcol}
+\newlength{\cellFiveToTwelveWidth}
+\newlength{\cellFiveToNineWidth}
+\newlength{\cellTenWidth}
+\newlength{\cellTenToTwelveWidth}
+
+% ===== Дополнительная колонка для короткого штампа =====
+\newlength{\extracolwidth}
+\setlength{\extracolwidth}{10mm}
+\newlength{\mainwidth}
+
+% ===== ПОЛНЫЙ ШТАМП (подписи в графе "№ докум.") =====
+\newcommand{\fullstampblock}[1]{%
+  \begingroup
+  \setlength{\tabcolsep}{0mm}%
+  \renewcommand{\arraystretch}{1.0}%
+  \renewcommand{\ESKDfontTabHead}{\normalfont\fontsize{9}{11}\selectfont}% без курсива
+  \newcommand{\ESKDfontTabHeadBig}{\normalfont\fontsize{18}{22}\selectfont}%
+  \setlength{\Pcol}{\dimexpr 0.0625#1 + 4mm\relax}%
+  \setlength{\Xcol}{\dimexpr (#1 - 4\Pcol)/8\relax}%
+  \setlength{\cellFiveToTwelveWidth}{7.9\Xcol}%
+  \setlength{\cellFiveToNineWidth}{4\Xcol}%
+  \setlength{\cellTenWidth}{\Xcol}%
+  \setlength{\cellTenToTwelveWidth}{3\Xcol}%
+  \begin{tabular}{@{}
+      |p{0.5\Pcol}|p{0.5\Pcol}
+      |p{\Pcol}|p{\Pcol}|p{\Pcol}
+      |p{\Xcol}|p{\Xcol}|p{\Xcol}|p{\Xcol}|p{\Xcol}
+      |p{0.33333\Xcol}|p{0.33333\Xcol}|p{0.33333\Xcol}
+      |p{\Xcol}|p{\Xcol}
+      | @{}}
+    \hline
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{\multirow{3}{\cellFiveToTwelveWidth}{\centering\ESKDfontTabHeadBig ${DocumentNumber}}} \\ \cline{1-5}
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{} \\ \cline{1-5}
+    \parbox[c][3mm][c]{0.5\Pcol}{\centering\ESKDfontTabHead Изм.} &
+    \parbox[c][3mm][c]{0.5\Pcol}{\centering\ESKDfontTabHead Лист} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead № докум.} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Подп.} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Дата} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{} \\ \cline{1-5}
+    \hline
+    % ----- Строка "Разраб." -----
+    \multicolumn{2}{|p{\Pcol}|}{\parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Разраб.}} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead ${Author}} & % № докум.
+    \rule{0pt}{3mm} & % Подп. пусто
+    \rule{0pt}{3mm} & % Дата пусто
+    % ===== ЯЧЕЙКА С НАЗВАНИЕМ И ТИПОМ =====
+    \multicolumn{5}{|p{\cellFiveToNineWidth}|}{\multirow{5}{\cellFiveToNineWidth}{%
+      \centering\normalfont
+      \shortstack[c]{%
+        \fontsize{18}{22}\selectfont ${Title}\\[2mm]
+        \fontsize{11}{13}\selectfont ${Type}%
+      }%
+    }} &
+    \multicolumn{3}{|p{\cellTenWidth}|}{\centering\ESKDfontTabHead Лит.} &
+    \multicolumn{1}{p{\Xcol}|}{\centering\ESKDfontTabHead Лист} &
+    \multicolumn{1}{p{\Xcol}|}{\centering\ESKDfontTabHead Листов} \\ \cline{1-5} \cline{11-15}
+    % ----- Строка "Пров." -----
+    \multicolumn{2}{|p{\Pcol}|}{\parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Пров.}} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead ${Checker}} &
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{5}{|p{\cellFiveToNineWidth}|}{} &
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \parbox[c][3mm][c]{\Xcol}{\centering\ESKDfontTabHead \thepage} &
+    \parbox[c][3mm][c]{\Xcol}{\centering\ESKDfontTabHead ${Sheets}} \\ \cline{1-5} \cline{11-15}
+    % ----- Строка "Т. контр." (пустая) -----
+    \multicolumn{2}{|p{\Pcol}|}{\rule{0pt}{3mm}} &
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{5}{|p{\cellFiveToNineWidth}|}{} &
+    \multicolumn{5}{|p{\cellTenToTwelveWidth}|}{\multirow{3}{\cellTenToTwelveWidth}{\centering\ESKDfontTabHeadBig ${Organization}}} \\ \cline{1-5}
+    % ----- Строка "Н. контр." -----
+    \multicolumn{2}{|p{\Pcol}|}{\parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Н.\ контр.}} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead ${Normcontr}} &
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{5}{|p{\cellFiveToNineWidth}|}{} &
+    \multicolumn{5}{|p{\cellTenToTwelveWidth}|}{} \\ \cline{1-5}
+    % ----- Строка "Утв." -----
+    \multicolumn{2}{|p{\Pcol}|}{\parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead Утв.}} &
+    \parbox[c][3mm][c]{\Pcol}{\centering\ESKDfontTabHead ${Approver}} &
+    \rule{0pt}{3mm} & \rule{0pt}{3mm} &
+    \multicolumn{5}{|p{\cellFiveToNineWidth}|}{} &
+    \multicolumn{5}{|p{\cellTenToTwelveWidth}|}{} \\
+    \hline
+  \end{tabular}%
+  \endgroup
+}
+
+% ===== КОРОТКИЙ ШТАМП =====
+\newcommand{\shortstampblock}[1]{%
+  \begingroup
+  \setlength{\tabcolsep}{0mm}%
+  \renewcommand{\arraystretch}{1.0}%
+  \renewcommand{\ESKDfontTabHead}{\normalfont\itshape\fontsize{9}{11}\selectfont}%
+  \newcommand{\ESKDfontTabHeadBig}{\normalfont\itshape\fontsize{18}{22}\selectfont}%
+  \setlength{\mainwidth}{\dimexpr #1 - \extracolwidth\relax}%
+  \setlength{\Pcol}{\dimexpr 0.0625\mainwidth + 2.5mm\relax}%
+  \setlength{\Xcol}{\dimexpr (\mainwidth - 4\Pcol)/8\relax}%
+  \setlength{\cellFiveToTwelveWidth}{7.9\Xcol}%
+  \begin{tabular}{@{}
+      |p{0.5\Pcol}|p{0.5\Pcol}
+      |p{\Pcol}|p{\Pcol}|p{\Pcol}
+      |p{\Xcol}|p{\Xcol}|p{\Xcol}|p{\Xcol}|p{\Xcol}
+      |p{0.33333\Xcol}|p{0.33333\Xcol}|p{0.33333\Xcol}
+      |p{\Xcol}|p{\Xcol}
+      |p{\extracolwidth}
+      | @{}}
+    \hline
+    \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{\multirow{3}{\cellFiveToTwelveWidth}{\centering\ESKDfontTabHeadBig ${DocumentNumber}}} &
+    \parbox[c][2mm][c]{\extracolwidth}{\centering\ESKDfontTabHead Лист} \\ \cline{1-5} \cline{16-16}
+    \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} & \rule{0pt}{2mm} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{} &
+    \multirow{2}*{\parbox[c][4mm][c]{\extracolwidth}{\centering\ESKDfontTabHead \thepage}} \\ \cline{1-5}
+    \parbox[c][2mm][c]{0.5\Pcol}{\centering\ESKDfontTabHead Изм.} &
+    \parbox[c][2mm][c]{0.5\Pcol}{\centering\ESKDfontTabHead Лист} &
+    \parbox[c][2mm][c]{\Pcol}{\centering\ESKDfontTabHead № докум.} &
+    \parbox[c][2mm][c]{\Pcol}{\centering\ESKDfontTabHead Подп.} &
+    \parbox[c][2mm][c]{\Pcol}{\centering\ESKDfontTabHead Дата} &
+    \multicolumn{10}{|p{\cellFiveToTwelveWidth}|}{} &
+    \\
+    \hline
+  \end{tabular}%
+  \endgroup
+}
+
+\let\emptysquaresblock\fullstampblock
+
+% ===== РАЗМЕЩЕНИЕ ШТАМПА В ФОНЕ =====
+\newcommand{\placefooterblock}[1]{%
+  \AddToShipoutPictureBG{%
+    \edef\fullstampwidth{\dimexpr #1 + 3.5mm\relax}%
+    \ifnum\value{page}=1
+      \put(\dimexpr 15mm - 0.6mm + (\textwidth - \fullstampwidth)/2\relax, 22.5mm){%
+        \fullstampblock{\fullstampwidth}%
+      }%
+    \else
+      \put(\dimexpr 15mm - 0.6mm + (\textwidth - \fullstampwidth)/2\relax, 9.5mm){%
+        \shortstampblock{\fullstampwidth}%
+      }%
+    \fi
+  }%
+}
+
+% ===== ТЕКСТЫ В САМОМ НИЗУ ЛИСТА =====
+\AddToShipoutPictureBG{%
+  \put(15mm, 2mm){\makebox(0,0)[l]{\normalfont\fontsize{8}{10}\selectfont Копировал}}%
+  \put(\dimexpr \textwidth - 15mm\relax, 2mm){\makebox(0,0)[r]{\normalfont\fontsize{8}{10}\selectfont Формат А4}}%
+}
+
+% ===== ОКРУЖЕНИЯ ТАБЛИЦ =====
+\newenvironment{ESKDbill}{%
+  \begin{longtable}{ |>{\centering\arraybackslash}m{19mm}
+                      |>{\raggedright\arraybackslash}m{109mm}
+                      |>{\centering\arraybackslash}m{6mm}
+                      |>{\raggedright\arraybackslash}m{44mm} | }
+    \hline
+    \parbox[c][15mm][c]{19mm}{\centering\ESKDfontTabHead Поз.\par обознач.} &
+    \parbox[c][15mm][c]{109mm}{\centering\ESKDfontTabHead Наименование} &
+    \parbox[c][15mm][c]{6mm}{\centering\ESKDfontTabHead Кол.} &
+    \parbox[c][15mm][c]{44mm}{\centering\ESKDfontTabHead Примечание} \\ \hline
+    \endhead
+    \hline
+    \endfirstfoot
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+}{%
+  \end{longtable}%
+}
+
+\newenvironment{ESKDspecification}{%
+  \begin{longtable}{ |>{\centering\arraybackslash}m{5mm}
+                      |>{\centering\arraybackslash}m{5mm}
+                      |>{\raggedright\arraybackslash}m{69mm}
+                      |>{\raggedright\arraybackslash}m{63mm}
+                      |>{\centering\arraybackslash}m{9mm}
+                      |>{\centering\arraybackslash}m{21mm} | }
+    \hline
+    \parbox[c][15mm][c]{5mm}{\centering\begin{sideways}\ESKDfontTabHead Формат\end{sideways}} &
+    \parbox[c][15mm][c]{5mm}{\centering\begin{sideways}\ESKDfontTabHead Зона\end{sideways}} &
+    \parbox[c][15mm][c]{7mm}{\centering\begin{sideways}\ESKDfontTabHead Поз.\end{sideways}} &
+    \parbox[c][15mm][c]{69mm}{\centering\ESKDfontTabHead Обозначение} &
+    \parbox[c][15mm][c]{63mm}{\centering\ESKDfontTabHead Наименование} &
+    \parbox[c][15mm][c]{9mm}{\centering\begin{sideways}\ESKDfontTabHead Кол.\end{sideways}} &
+    \parbox[c][15mm][c]{21mm}{\centering\ESKDfontTabHead Примеч.\end{sideways}} \\ \hline
+    \endhead
+    \hline
+    \endfirstfoot
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+}{%
+  \end{longtable}%
+}
+
+\newenvironment{ESKDspecpurchase}{%
+  \begin{longtable}{ |>{\centering\arraybackslash}m{6mm}
+                      |>{\raggedright\arraybackslash}m{58.5mm}
+                      |>{\raggedright\arraybackslash}m{44mm}
+                      |>{\raggedright\arraybackslash}m{69mm}
+                      |>{\raggedright\arraybackslash}m{54mm}
+                      |>{\raggedright\arraybackslash}m{69mm}
+                      |>{\centering\arraybackslash}m{15mm}
+                      |>{\centering\arraybackslash}m{15mm}
+                      |>{\centering\arraybackslash}m{15mm}
+                      |>{\centering\arraybackslash}m{15mm}
+                      |>{\raggedright\arraybackslash}m{23mm} | }
+    \hline
+    \multirow{2}*{\parbox[c][27mm][c]{6mm}{\centering\begin{sideways}\ESKDfontTabHead \No\ строки\end{sideways}}} &
+    \multirow{2}*{\parbox[c][27mm][c]{58mm}{\centering\ESKDfontTabHead Наименование}} &
+    \multirow{2}*{\parbox[c][27mm][c]{44mm}{\centering\ESKDfontTabHead Код продукции}} &
+    \multirow{2}*{\parbox[c][27mm][c]{69mm}{\centering\ESKDfontTabHead Обозначение документа на поставку}} &
+    \multirow{2}*{\parbox[c][27mm][c]{54mm}{\centering\ESKDfontTabHead Поставщик}} &
+    \multirow{2}*{\parbox[c][27mm][c]{69mm}{\centering\ESKDfontTabHead Куда входит (обозначение)}} &
+    \multicolumn{4}{c|}{\parbox[c][9mm][c]{63mm}{\centering\ESKDfontTabHead Количество}} &
+    \multirow{2}*{\parbox[c][27mm][c]{23mm}{\centering\ESKDfontTabHead Примечание}} \\ \cline{7-10}
+    &&&&&&
+    \parbox[c][18mm][c]{15mm}{\centering\ESKDfontTabHead на изделие} &
+    \parbox[c][18mm][c]{15mm}{\centering\ESKDfontTabHead в комплекты} &
+    \parbox[c][18mm][c]{15mm}{\centering\ESKDfontTabHead на регулир} &
+    \parbox[c][18mm][c]{15mm}{\centering\ESKDfontTabHead всего} &
+    \\ \hline
+    \endhead
+    \hline
+    \endfirstfoot
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+}{%
+  \end{longtable}%
+}
+
+\begin{document}
+% Для первой страницы увеличиваем отступ до 35 мм
+\enlargethispage{-20mm}
+\placefooterblock{${SquaresBlockWidth}}
+\begin{${Environment}}
+${Content}
+\end{${Environment}}
+\end{document}
