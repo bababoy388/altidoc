@@ -31,7 +31,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-echo Зависимости установлены.
+echo Зависимости установлены...
 
 :: Проверка lualatex (если программа должна формировать PDF)
 lualatex --version >nul 2>&1
@@ -42,5 +42,5 @@ if errorlevel 1 (
 )
 echo.
 echo Установка завершена!
-echo Теперь запускайте программу через run.bat
+echo Теперь запускайте программу через run.vbs
 pause
