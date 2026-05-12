@@ -1534,7 +1534,7 @@ class Schematic():
                 
                 component.fields[item] = value
                
-            component.fields['Tolerance'] = altiumbom.format_tolerance(component.fields['Tolerance'])
+            component.fields['Tolerance'] = altiumbom.format_tolerance("")
             component.fields['_FType'] = altiumbom.format_ftype(component.getRefType(), "")
             component.fields['_Subclass'] = altiumbom.format_type(component.getRefType(), "")
             component.fields['_Class'] = altiumbom.format_class(component.getRefType())
