@@ -1,3 +1,4 @@
+lua-uni-data
 polyglossia
 etoolbox
 fontspec
@@ -40,4 +41,3 @@ lastpage
 geometry
 gloss-russian
 babel-russian
-lua-uni-data
