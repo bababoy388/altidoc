@@ -1495,11 +1495,11 @@ class Schematic():
         self.approver = ""
 
         self.components = []
-
         self.typeNamesDict = {}
-        
+
         netlist = altiumbom.read(altium_bom_name)
-        
+
+        # ---------- 1. Создаём компоненты, заполняем основные поля ----------
         for comp in netlist:
             component = Component(self)
             for item, value in comp.items():
@@ -1531,15 +1531,20 @@ class Schematic():
                     component.fitted = True if value == 'Fitted' else False
                 elif item == config.get('aliases', '_Value') and config.get('aliases', '_Value') != '':
                     component.value = value if value != '~' else ''
-                
+
                 component.fields[item] = value
-               
+
+            self.components.append(component)
+
+        # ---------- 2. Исправляем обозначения ----------
+        self._fix_references()
+
+        # ---------- 3. Заполняем поля, зависящие от типа обозначения ----------
+        for component in self.components:
             component.fields['Tolerance'] = altiumbom.format_tolerance("")
             component.fields['_FType'] = altiumbom.format_ftype(component.getRefType(), "")
             component.fields['_Subclass'] = altiumbom.format_type(component.getRefType(), "")
             component.fields['_Class'] = altiumbom.format_class(component.getRefType())
-                
-            self.components.append(component)
 
     def getGroupedComponentsIndex(self):
         """Вернуть компоненты, сгруппированные по обозначению и типу."""
@@ -1569,6 +1574,44 @@ class Schematic():
         if len(compGroup) > 0:
             groups.append(compGroup)
         return groups
+
+    def _fix_references(self):
+        """
+        Исправляет обозначения без числовой части или с '?', присваивая им номера.
+        """
+        # Собираем максимальные номера по буквенным префиксам среди корректных обозначений
+        max_numbers = {}
+        for comp in self.components:
+            ref = comp.reference
+            if re.match(REF_REGEXP, ref):
+                ref_type = comp.getRefType()
+                ref_num = comp.getRefNumber()
+                if ref_type not in max_numbers or ref_num > max_numbers[ref_type]:
+                    max_numbers[ref_type] = ref_num
+
+        # Обрабатываем компоненты, где обозначение не соответствует шаблону
+        counters = {}
+        for comp in self.components:
+            ref = comp.reference
+            if not re.match(REF_REGEXP, ref):
+                # Извлекаем буквенную часть (удаляем '?' и пробелы)
+                ref_type = ref.replace('?', '').strip()
+                if not ref_type:
+                    ref_type = 'U'  # если вообще пусто, обозначим как U?
+
+                if ref_type in max_numbers:
+                    next_num = max_numbers[ref_type] + 1
+                else:
+                    next_num = 1
+
+                # Учитываем уже исправленные в этом проходе (чтобы не дублировать номера)
+                if ref_type in counters:
+                    next_num = max(max_numbers.get(ref_type, 0), counters[ref_type]) + 1
+
+                comp.reference = f"{ref_type}{next_num}"
+                counters[ref_type] = next_num
+                # Обновляем max_numbers для следующих компонентов с этим префиксом
+                max_numbers[ref_type] = next_num
     
     def getSuperGroupedComponentsIndex(self):
         """Вернуть компоненты, сгруппированные по обозначению, классу и типу."""
