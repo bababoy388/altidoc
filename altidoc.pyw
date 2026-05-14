@@ -370,7 +370,9 @@ class MainWin(QtWidgets.QMainWindow):
             self.readNetlist()
 
     def slotOpen(self):
-        (path, filt) = QtWidgets.QFileDialog.getOpenFileName(self, 'Открыть', os.getcwd(), 'Altium BOM (*_bom.csv)')
+        (path, filt) = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Открыть', os.getcwd(), 'CSV Files (*.csv)'
+        )
         if path:
             self.netlist = path
             self.readNetlist()
@@ -466,15 +468,16 @@ class MainWin(QtWidgets.QMainWindow):
     def about(self):
         QtWidgets.QMessageBox.about(self, 'О программе',
             '''<h2>altidoc</h2>
-            <p><b>v 0.0
+            <p><b>v 1.2
             <p>(бывший bom2latexmerge)
             <p>Программа для чтения файлов BOM Altium Designer,
             <br>обработки и преобразования в текстовые документы
             <br>по ГОСТ 2.106-96, ГОСТ 2.113-75, ГОСТ 2.701-2008
             <br>(форматы LaTeX, PDF, CSV)
-            <p><b>Автор:
+            <p><b>Авторы:
+            <br><b>А. А. Бокша
             <br><b>П. В. Шаршавин
-            <p><b>© ООО "РТС", 2021''')
+            <p><b>© ООО "РТС", 2021-2026''')
 
     def aboutQt(self):
         QtWidgets.QMessageBox.aboutQt(self, 'О Qt')
@@ -498,7 +501,8 @@ def main():
 
     netlist = args.bom
 
-    if len(netlist) > 8 and netlist[-8:] == '_bom.csv' and os.path.isfile(netlist):
+    #if len(netlist) > 8 and netlist[-8:] == '_bom.csv' and os.path.isfile(netlist):
+    if os.path.isfile(netlist):
         if len(os.path.dirname(netlist)):
             os.chdir(os.path.join(os.path.dirname(netlist), ''))
         netlist = os.path.join(os.getcwd(), os.path.basename(netlist))
