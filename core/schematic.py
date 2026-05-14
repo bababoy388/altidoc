@@ -65,7 +65,7 @@ class Component():
         if ref is None:
             ref = self.reference
         if not re.match(REF_REGEXP, ref):
-            return None
+            raise ValueError(f"Обозначение '{ref}' не соответствует формату (должно содержать буквенную часть и число), включите автонумерацию или изменить обозначение вручную")
         refType = re.search(REF_REGEXP, ref).group(1)
         return refType
 
@@ -1485,7 +1485,7 @@ class CompGroupBom():
 class Schematic():
     """Данные о схеме и компонентах."""
 
-    def __init__(self, altium_bom_name):
+    def __init__(self, altium_bom_name, auto_num=True):
         self.title = ""
         self.number = ""
         self.company = ""
@@ -1494,10 +1494,23 @@ class Schematic():
         self.inspector = ""
         self.approver = ""
 
+        self.fixed_references_log = []
         self.components = []
         self.typeNamesDict = {}
 
         netlist = altiumbom.read(altium_bom_name)
+
+        # ---------- 0. Проверка обязательных колонок ----------
+        REQUIRED_FIELDS = ['Variant', 'Comment', 'Designator', 'Fitted', 'ProjectName']
+        if netlist:
+            first_row = netlist[0]
+            missing = [field for field in REQUIRED_FIELDS if field not in first_row]
+            if missing:
+                raise ValueError(
+                    f"В файле '{altium_bom_name}' отсутствуют обязательные колонки: {', '.join(missing)}"
+                )
+        else:
+            raise ValueError(f"Файл '{altium_bom_name}' не содержит данных (пустой список строк).")
 
         # ---------- 1. Создаём компоненты, заполняем основные поля ----------
         for comp in netlist:
@@ -1533,11 +1546,11 @@ class Schematic():
                     component.value = value if value != '~' else ''
 
                 component.fields[item] = value
-
             self.components.append(component)
 
         # ---------- 2. Исправляем обозначения ----------
-        self._fix_references()
+        if auto_num:
+            self._fix_references()
 
         # ---------- 3. Заполняем поля, зависящие от типа обозначения ----------
         for component in self.components:
@@ -1576,10 +1589,7 @@ class Schematic():
         return groups
 
     def _fix_references(self):
-        """
-        Исправляет обозначения без числовой части или с '?', присваивая им номера.
-        """
-        # Собираем максимальные номера по буквенным префиксам среди корректных обозначений
+        """Исправляет обозначения без числовой части или с '?', присваивая им номера."""
         max_numbers = {}
         for comp in self.components:
             ref = comp.reference
@@ -1589,29 +1599,32 @@ class Schematic():
                 if ref_type not in max_numbers or ref_num > max_numbers[ref_type]:
                     max_numbers[ref_type] = ref_num
 
-        # Обрабатываем компоненты, где обозначение не соответствует шаблону
         counters = {}
         for comp in self.components:
             ref = comp.reference
             if not re.match(REF_REGEXP, ref):
-                # Извлекаем буквенную часть (удаляем '?' и пробелы)
                 ref_type = ref.replace('?', '').strip()
                 if not ref_type:
-                    ref_type = 'U'  # если вообще пусто, обозначим как U?
+                    ref_type = 'U'
 
                 if ref_type in max_numbers:
                     next_num = max_numbers[ref_type] + 1
                 else:
                     next_num = 1
 
-                # Учитываем уже исправленные в этом проходе (чтобы не дублировать номера)
                 if ref_type in counters:
                     next_num = max(max_numbers.get(ref_type, 0), counters[ref_type]) + 1
 
-                comp.reference = f"{ref_type}{next_num}"
+                old_ref = ref
+                new_ref = f"{ref_type}{next_num}"
+                comp.reference = new_ref
                 counters[ref_type] = next_num
-                # Обновляем max_numbers для следующих компонентов с этим префиксом
                 max_numbers[ref_type] = next_num
+
+                # Сохраняем сообщение о замене
+                self.fixed_references_log.append(
+                    f"Автонумерация: '{old_ref}' заменено на '{new_ref}'"
+                )
     
     def getSuperGroupedComponentsIndex(self):
         """Вернуть компоненты, сгруппированные по обозначению, классу и типу."""

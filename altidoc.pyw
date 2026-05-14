@@ -149,17 +149,21 @@ class MainWin(QtWidgets.QMainWindow):
         QtWidgets.QApplication.processEvents()
 
         try:
+            auto_num = self.autoNumCheckBox.isChecked()
             for i, doc in enumerate(self.tables.keys()):
                 if doc == 'index':
-                    table = index.build(self.netlist)
+                    table, ref_log = index.build(self.netlist, auto_num)
+                    if ref_log:
+                        for msg in ref_log:
+                            self.append_log(msg, 'INFO')
                 elif doc == 'spec':
-                    table = spec.build(self.netlist)
+                    table = spec.build(self.netlist, auto_num)
                 elif doc == 'bom':
-                    table = bom.build(self.netlist)
+                    table = bom.build(self.netlist, auto_num)
                 elif doc == 'sds':
-                    table = sds.build(self.netlist)
+                    table = sds.build(self.netlist, auto_num)
                 elif doc == 'sds2':
-                    table = sds2.build(self.netlist)
+                    table = sds2.build(self.netlist, auto_num)
 
                 stamp_dict = stamp.build(self.netlist, doc)
                 header = output.lookup[stamp_dict['type']]['header']

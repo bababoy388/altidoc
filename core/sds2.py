@@ -1,11 +1,6 @@
-import re
-import sys
-import traceback
+from . import schematic, config
 
-from . import stamp, schematic, config
-
-
-def build(netlist):
+def build(netlist, auto_num=True):
     """Построить SDS копия (без производителя).
 
     Построить таблицу для закупки без столбца производителя.
@@ -44,55 +39,50 @@ def build(netlist):
     # --------------------------------------------------------------------
     # Начало построения таблицы
     # --------------------------------------------------------------------
-    try:
-        sch = schematic.Schematic(netlist)
-        if sch is None:
-            return []
-        compGroups = sch.getSuperGroupedComponentsSpec()
-        prevGroup = None
-        emptyRowsType = config.getint("table", "empty rows between diff type")
-        variant = sch.variant
-
-        gotoNextRow()
-
-        if config.getboolean("sections", "pcb"):
-            currentPosition += 1
-
-        for classgroup in compGroups:
-            for group in classgroup:
-                increment = 1
-                if prevGroup is not None:
-                    if config.getboolean("table", "reserve position numbers"):
-                        increment += emptyRowsType
-                if config.getboolean("table", "empty row after group title"):
-                    if config.getboolean("table", "reserve position numbers"):
-                        increment += 1
-                for compRange in group:
-                    compNumber = compRange.getSdsValue("number")
-                    compRef = compRange.getRefRangeFittedString()
-                    compComment = compRange.getSdsValue("comment")
-                    comment = compRef
-                    if comment:
-                        if compComment:
-                            comment = comment + '\n' + compComment
-                    else:
-                        comment = compComment
-
-                    # строка теперь без производителя
-                    fillRow(
-                        ["", compNumber, str(compRange.lenFitted()), comment],
-                        posIncrement=increment,
-                        fitted=compRange.isFitted()
-                    )
-                    increment = 1
-                prevGroup = group
-
-        for rowIndex in range(len(table)):
-            table[rowIndex][COL_COMMENT] = table[rowIndex][COL_COMMENT].replace('\n', ', ')
-            table[rowIndex][COL_COMMENT] = table[rowIndex][COL_COMMENT].replace('Формованная', 'Формовать')
-
-        return table[:-1]
-
-    except Exception:
-        print("Ошибка при построении SDS (без произв.):\n", traceback.format_exc())
+    sch = schematic.Schematic(netlist, auto_num=auto_num)
+    if sch is None:
         return []
+    compGroups = sch.getSuperGroupedComponentsSpec()
+    prevGroup = None
+    emptyRowsType = config.getint("table", "empty rows between diff type")
+    variant = sch.variant
+
+    gotoNextRow()
+
+    if config.getboolean("sections", "pcb"):
+        currentPosition += 1
+
+    for classgroup in compGroups:
+        for group in classgroup:
+            increment = 1
+            if prevGroup is not None:
+                if config.getboolean("table", "reserve position numbers"):
+                    increment += emptyRowsType
+            if config.getboolean("table", "empty row after group title"):
+                if config.getboolean("table", "reserve position numbers"):
+                    increment += 1
+            for compRange in group:
+                compNumber = compRange.getSdsValue("number")
+                compRef = compRange.getRefRangeFittedString()
+                compComment = compRange.getSdsValue("comment")
+                comment = compRef
+                if comment:
+                    if compComment:
+                        comment = comment + '\n' + compComment
+                else:
+                    comment = compComment
+
+                # строка теперь без производителя
+                fillRow(
+                    ["", compNumber, str(compRange.lenFitted()), comment],
+                    posIncrement=increment,
+                    fitted=compRange.isFitted()
+                )
+                increment = 1
+            prevGroup = group
+
+    for rowIndex in range(len(table)):
+        table[rowIndex][COL_COMMENT] = table[rowIndex][COL_COMMENT].replace('\n', ', ')
+        table[rowIndex][COL_COMMENT] = table[rowIndex][COL_COMMENT].replace('Формованная', 'Формовать')
+
+    return table[:-1]
