@@ -1501,7 +1501,7 @@ class Schematic():
         netlist = altiumbom.read(altium_bom_name)
 
         # ---------- 0. Проверка обязательных колонок ----------
-        REQUIRED_FIELDS = ['Variant', 'Comment', 'Designator', 'Fitted', 'ProjectName']
+        REQUIRED_FIELDS = ['Variant', 'Comment', 'Designator', 'Fitted']
         if netlist:
             first_row = netlist[0]
             missing = [field for field in REQUIRED_FIELDS if field not in first_row]
@@ -1513,12 +1513,13 @@ class Schematic():
             raise ValueError(f"Файл '{altium_bom_name}' не содержит данных (пустой список строк).")
 
         # ---------- 1. Создаём компоненты, заполняем основные поля ----------
+        has_project_name = 'ProjectName' in first_row
         for comp in netlist:
             component = Component(self)
             for item, value in comp.items():
                 if item == 'Title':
                     self.title = value
-                elif item == 'ProjectName':
+                elif item == 'ProjectName' and has_project_name:
                     self.number = '.'.join(value.split('.')[:-1]) + ' Э3'
                 elif item == 'Organization':
                     self.company = value
@@ -1547,6 +1548,9 @@ class Schematic():
 
                 component.fields[item] = value
             self.components.append(component)
+
+        if not self.number:
+            self.number = "Project name не указан"
 
         # ---------- 2. Исправляем обозначения ----------
         if auto_num:
