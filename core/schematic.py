@@ -35,7 +35,7 @@ class Component():
         self.schematic = schematic
         self.reference = ""
         self.value = ""
-        self.fitted = False
+        self.fitted = True
         self.footprint = ""
         self.datasheet = ""
         self.fields = {}
@@ -1486,6 +1486,7 @@ class Schematic():
     """Данные о схеме и компонентах."""
 
     def __init__(self, altium_bom_name, auto_num=True):
+        self.variant = ""
         self.title = ""
         self.number = ""
         self.company = ""
@@ -1501,7 +1502,8 @@ class Schematic():
         netlist = altiumbom.read(altium_bom_name)
 
         # ---------- 0. Проверка обязательных колонок ----------
-        REQUIRED_FIELDS = ['Variant', 'Comment', 'Designator', 'Fitted']
+        required_str = config.get('bom_required', 'fields')
+        REQUIRED_FIELDS = [f.strip() for f in required_str.split(',') if f.strip()]
         if netlist:
             first_row = netlist[0]
             missing = [field for field in REQUIRED_FIELDS if field not in first_row]
@@ -1512,40 +1514,45 @@ class Schematic():
         else:
             raise ValueError(f"Файл '{altium_bom_name}' не содержит данных (пустой список строк).")
 
-        # ---------- 1. Создаём компоненты, заполняем основные поля ----------
-        has_project_name = 'ProjectName' in first_row
+        # ---------- 1. Загружаем маппинг из конфига ----------
+
+        mapping = {}
+        for attr in ['reference', 'value', 'footprint', 'datasheet', 'fitted',
+                     'title', 'number', 'company', 'developer', 'verifier', 'inspector', 'approver', 'variant']:
+            col = config.get('bom_mapping', attr)
+            if col is not None:
+                mapping[attr] = col
+
+        col_to_attr = {}
+        for attr, col in mapping.items():
+            if attr in ('title', 'number', 'company', 'developer', 'verifier', 'inspector', 'approver', 'variant'):
+                target = 'schematic'
+            else:
+                target = 'component'
+            col_to_attr[col] = (target, attr)
+
+        # ---------- 2. Создаём компоненты и заполняем атрибуты ----------
         for comp in netlist:
             component = Component(self)
             for item, value in comp.items():
-                if item == 'Title':
-                    self.title = value
-                elif item == 'ProjectName' and has_project_name:
-                    self.number = '.'.join(value.split('.')[:-1]) + ' Э3'
-                elif item == 'Organization':
-                    self.company = value
-                elif item == 'DrawnBy':
-                    self.developer = value
-                elif item == 'CheckedBy':
-                    self.verifier = value
-                elif item == 'NormInspection':
-                    self.inspector = value
-                elif item == 'ApprovedBy':
-                    self.approver = value
-                elif item == 'Variant':
-                    self.variant = value if value != '-00' else ''
-                elif item == 'Designator':
-                    component.reference = value
-                elif item == 'Value' and config.get('aliases', '_Value') == '':
-                    component.value = value if value != '~' else ''
-                elif item == 'Footprint':
-                    component.footprint = value if value != '~' else ''
-                elif item == 'Datasheet':
-                    component.datasheet = value if value != '~' else ''
-                elif item == 'Fitted':
-                    component.fitted = True if value == 'Fitted' else False
-                elif item == config.get('aliases', '_Value') and config.get('aliases', '_Value') != '':
-                    component.value = value if value != '~' else ''
-
+                # Если колонка есть в маппинге – обрабатываем
+                if item in col_to_attr:
+                    target_type, attr_name = col_to_attr[item]
+                    if target_type == 'schematic':
+                        if attr_name == 'number':
+                            self.number = '.'.join(value.split('.')[:-1]) + ' Э3'
+                        elif attr_name == 'variant':
+                            self.variant = value if value != '-00' else ''
+                        else:
+                            setattr(self, attr_name, value)
+                    else:  # component
+                        if attr_name == 'value':
+                            component.value = value if value != '~' else ''
+                        elif attr_name == 'fitted':
+                            component.fitted = True if value == 'Fitted' else False
+                        else:
+                            setattr(component, attr_name, value if value != '~' else '')
+                # Все колонки всегда сохраняются в fields (для шаблонов)
                 component.fields[item] = value
             self.components.append(component)
 
