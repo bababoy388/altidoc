@@ -133,7 +133,7 @@
 \setlength{\extracolwidth}{10mm}
 \newlength{\mainwidth}
 
-% ===== ПОЛНЫЙ ШТАМП (исправлены все двойные линии) =====
+% ===== ПОЛНЫЙ ШТАМП =====
 \newcommand{\fullstampblock}[1]{%
   \begingroup
   \setlength{\tabcolsep}{0mm}%
@@ -203,7 +203,7 @@
   \endgroup
 }
 
-% ===== КОРОТКИЙ ШТАМП (аналогично исправлены двойные вертикальные линии) =====
+% ===== КОРОТКИЙ ШТАМП =====
 \newcommand{\shortstampblock}[1]{%
   \begingroup
   \setlength{\tabcolsep}{0mm}%
@@ -263,7 +263,7 @@
   \put(\dimexpr \textwidth - 15mm\relax, 2mm){\makebox(0,0)[r]{\normalfont\itshape\fontsize{8}{10}\selectfont Формат А4}}%
 }
 
-% ===== ОКРУЖЕНИЯ ТАБЛИЦ (нижние \hline убраны с первой и последней страницы) =====
+% ===== ОКРУЖЕНИЯ ТАБЛИЦ (исправлены: убраны \hline из \endlastfoot) =====
 \newenvironment{ESKDbill}{%
   \begin{longtable}{ |>{\centering\arraybackslash}m{17.1mm}
                       |>{\raggedright\arraybackslash}m{98.1mm}
@@ -277,7 +277,7 @@
     \endhead
     \endfirstfoot
     \endfoot
-    \hline
+    % \hline убрана, нижняя черта будет из последней строки данных
     \endlastfoot
 }{%
   \end{longtable}%
@@ -301,7 +301,7 @@
     \endhead
     \endfirstfoot
     \endfoot
-    \hline
+    % \hline убрана
     \endlastfoot
 }{%
   \end{longtable}%
@@ -337,7 +337,7 @@
     \endhead
     \endfirstfoot
     \endfoot
-    \hline
+    % \hline убрана
     \endlastfoot
 }{%
   \end{longtable}%

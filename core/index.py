@@ -26,16 +26,23 @@ def build(netlist, auto_num=True):
         table[-1] = pad_or_truncate(values, COLUMN_COUNT)
         if isTitle:
             table[-1][COL_STYLE] = 'title'
+        else:
+            table[-1][COL_STYLE] = ''
         gotoNextRow()
+
+    # --------------------------------------------------------------------
+    # Проверка на "не устанавливать" (Н/У, NC + not fitted)
+    # --------------------------------------------------------------------
+    def _check_not_installed(name):
+        if not name:
+            return False
+        clean = re.sub(r'\s+', '', name).upper()
+        return 'Н/У' in clean or 'NC' in clean
 
     # --------------------------------------------------------------------
     # Парсинг строки перечисления позиций
     # --------------------------------------------------------------------
     def _parse_ref_list(ref_str):
-        """
-        Из строки 'C1, C4, C7-C8, C13, C14' возвращает список сегментов
-        [(prefix, start, end), ...].
-        """
         if not ref_str:
             return []
         parts = [p.strip() for p in ref_str.split(',')]
@@ -56,18 +63,11 @@ def build(netlist, auto_num=True):
     # Функция разбиения на чанки (не более 3 элементов)
     # --------------------------------------------------------------------
     def split_refs_to_chunks(comp_range, max_elements=3):
-        """
-        Всегда вызывается для получения списка строк.
-        Сама определяет, нужно ли разбиение, и возвращает список
-        кортежей [(ref_str, qty), ...].
-        """
         refs = list(comp_range)
 
-        # Случай: один элемент-строка с запятыми/диапазонами (Altium BOM)
         if len(refs) == 1 and (',' in refs[0] or '-' in refs[0]):
             segments = _parse_ref_list(refs[0])
         else:
-            # Обычный случай: отдельные обозначения
             segments = []
             if refs:
                 cur_type = comp_range.getRefType(refs[0])
@@ -88,7 +88,18 @@ def build(netlist, auto_num=True):
         if not segments:
             return []
 
-        # Проверяем adjustable
+        # ------------------------------------------------------------
+        # Разворачиваем сегменты длиной 2 в два одиночных обозначения
+        # ------------------------------------------------------------
+        expanded_segments = []
+        for typ, s, e in segments:
+            if e - s == 1:
+                expanded_segments.append((typ, s, s))
+                expanded_segments.append((typ, e, e))
+            else:
+                expanded_segments.append((typ, s, e))
+        segments = expanded_segments
+
         adjustable_field = config.get("fields", "adjustable")
         adjustable = (comp_range.getFieldValue(adjustable_field) is not None)
 
@@ -101,12 +112,28 @@ def build(netlist, auto_num=True):
                 sep = config.get("table", "ref separator")
                 return f"{t}{s}{star}{sep}{t}{e}{star}"
 
+        # ------------------------------------------------------------
+        # Разбиваем на чанки с новым правилом:
+        # - диапазон (e > s) всегда один в чанке
+        # - одиночные группируются до 3 штук
+        # ------------------------------------------------------------
         chunks = []
-        for i in range(0, len(segments), max_elements):
-            chunk_segs = segments[i:i+max_elements]
-            ref_str = ", ".join(seg_to_str(s) for s in chunk_segs)
-            qty = sum(e - s + 1 for _, s, e in chunk_segs)
-            chunks.append((ref_str, qty))
+        i = 0
+        while i < len(segments):
+            typ, s, e = segments[i]
+            if e > s:   # диапазон
+                chunks.append( (seg_to_str((typ, s, e)), e - s + 1) )
+                i += 1
+            else:       # одиночные
+                singles = []
+                qty = 0
+                while i < len(segments) and segments[i][1] == segments[i][2] and len(singles) < max_elements:
+                    singles.append(segments[i])
+                    qty += 1
+                    i += 1
+                ref_str = ", ".join(seg_to_str(s) for s in singles)
+                chunks.append( (ref_str, qty) )
+
         return chunks
 
     # --------------------------------------------------------------------
@@ -159,12 +186,20 @@ def build(netlist, auto_num=True):
                     name += ' ' + compDoc
                 compComment = comp_obj.getIndexValue('comment')
 
-                # Получаем все чанки
+                if not comp_obj.fitted or _check_not_installed(name):
+                    compComment = "не устанавливать"
+
                 chunks = split_refs_to_chunks(comp_obj)
-                for idx, (ref_str, qty) in enumerate(chunks):
-                    # Количество только в первой строке
-                    qty_str = str(qty) if idx == 0 else ''
-                    fillRow([ref_str, name, qty_str, compComment])
+                total_qty = sum(qty for _, qty in chunks)
+
+                for idx, (ref_str, _) in enumerate(chunks):
+                    if idx == 0:
+                        qty_str = str(total_qty)
+                        name_str = name
+                    else:
+                        qty_str = ''
+                        name_str = ''
+                    fillRow([ref_str, name_str, qty_str, compComment])
             else:
                 titleLines = group.getTitle()
                 for title in titleLines:
@@ -184,19 +219,89 @@ def build(netlist, auto_num=True):
                             name += ' ' + compDoc
                     compComment = compRange.getIndexValue('comment')
 
-                    # Получаем все чанки
+                    if not compRange.isFitted() or _check_not_installed(name):
+                        compComment = "не устанавливать"
+
                     chunks = split_refs_to_chunks(compRange)
-                    for idx, (ref_str, qty) in enumerate(chunks):
-                        qty_str = str(qty) if idx == 0 else ''
-                        fillRow([ref_str, name, qty_str, compComment])
+                    total_qty = sum(qty for _, qty in chunks)
+
+                    for idx, (ref_str, _) in enumerate(chunks):
+                        if idx == 0:
+                            qty_str = str(total_qty)
+                            name_str = name
+                        else:
+                            qty_str = ''
+                            name_str = ''
+                        fillRow([ref_str, name_str, qty_str, compComment])
             prevGroup = group
 
     # --------------------------------------------------------------------
-    # Добавление пустых строк для заполнения страниц PDF
+    # Обработка последних/предпоследних строк + удаление полностью пустых страниц
     # --------------------------------------------------------------------
     rows_first_page = 27
     rows_other_pages = 29
 
+    data_rows = len(table)
+    if data_rows <= rows_first_page:
+        target_rows = rows_first_page
+    else:
+        remainder = (data_rows - rows_first_page) % rows_other_pages
+        if remainder == 0:
+            target_rows = data_rows
+        else:
+            target_rows = data_rows + (rows_other_pages - remainder)
+
+    while len(table) < target_rows:
+        table.append([''] * COLUMN_COUNT)
+
+    # Собираем заголовки, попавшие на последнюю или предпоследнюю позицию
+    insert_indices = set()
+    page = 0
+    while True:
+        if page == 0:
+            rows_this_page = rows_first_page
+        else:
+            rows_this_page = rows_other_pages
+        start_idx = sum(rows_first_page if p == 0 else rows_other_pages for p in range(page))
+        end_idx = start_idx + rows_this_page - 1
+        if start_idx >= len(table):
+            break
+        end_idx = min(end_idx, len(table) - 1)
+
+        if table[end_idx][COL_STYLE] == 'title':
+            insert_indices.add(end_idx)
+        if end_idx - 1 >= start_idx and table[end_idx - 1][COL_STYLE] == 'title':
+            insert_indices.add(end_idx - 1)
+
+        page += 1
+
+    for idx in sorted(insert_indices, reverse=True):
+        table.insert(idx, [''] * COLUMN_COUNT)
+
+    # Удаляем страницы, полностью состоящие из пустых строк (кроме первой)
+    def is_row_empty(row):
+        return all(cell == '' for cell in row)
+
+    cleaned_table = []
+    page = 0
+    idx = 0
+    while idx < len(table):
+        if page == 0:
+            page_rows = rows_first_page
+        else:
+            page_rows = rows_other_pages
+        chunk = table[idx:idx+page_rows]
+        # Удаляем страницу только если она не первая и вся состоит из пустых строк
+        if page > 0 and all(is_row_empty(r) for r in chunk):
+            pass  # пропускаем эту страницу
+        else:
+            cleaned_table.extend(chunk)
+        idx += page_rows
+        page += 1
+
+    table = cleaned_table
+
+    # Окончательное дополнение до целого числа страниц
     total_rows = len(table)
     if total_rows < rows_first_page:
         need = rows_first_page - total_rows

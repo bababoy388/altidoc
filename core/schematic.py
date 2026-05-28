@@ -1571,32 +1571,50 @@ class Schematic():
             component.fields['_Class'] = altiumbom.format_class(component.getRefType())
 
     def getGroupedComponentsIndex(self):
-        """Вернуть компоненты, сгруппированные по обозначению и типу."""
-        sortedComponents = sorted(
-            self.components,
-            key=lambda comp: comp.getRefNumber()
-        )
-        sortedComponents = sorted(
-            sortedComponents,
-            key=lambda comp: comp.getRefType()
-        )
+        """Вернуть компоненты, сгруппированные по обозначению и типу.
+
+        Одинаковые компоненты с любыми номерами объединяются в одну группу.
+        Сортировка групп по минимальному номеру.
+        """
+        # Шаг 1. Группируем все компоненты по одинаковым параметрам
+        groups_dict = {}
+        for comp in self.components:
+            # Ключ: тип, наименование, документ, примечание
+            key = (
+                comp.getIndexValue("type"),
+                comp.getIndexValue("name"),
+                comp.getIndexValue("doc"),
+                comp.getIndexValue("comment")
+            )
+            groups_dict.setdefault(key, []).append(comp)
+
+        comp_ranges = []
+        for key, comps in groups_dict.items():
+            # Сортируем по буквенной части, затем по номеру
+            sorted_comps = sorted(comps, key=lambda c: (c.getRefType(), c.getRefNumber()))
+            cr = CompRangeIndex(self)
+            for comp in sorted_comps:
+                cr.append(comp)
+            if len(cr) > 0:
+                comp_ranges.append(cr)
+
+        # Шаг 2. Сортируем полученные диапазоны по первому номеру
+        # (по типу обозначения, затем по минимальному номеру)
+        comp_ranges.sort(key=lambda cr: (
+            cr.getRefType(),
+            min(cr.getRefNumber(ref) for ref in cr)
+        ))
+
+        # Шаг 3. Формируем группы (CompGroup) как раньше, но теперь без разрывов
         groups = []
         compGroup = CompGroupIndex(self)
-        compRange = CompRangeIndex(self)
-        for comp in sortedComponents:
-            if not comp.fitted:
-                continue
-            if not compRange.append(comp):
-                if not compGroup.append(compRange):
-                    groups.append(compGroup)
-                    compGroup = CompGroupIndex(self, compRange)
-                compRange = CompRangeIndex(self, comp)
-        if len(compRange) > 0:
-            if not compGroup.append(compRange):
+        for cr in comp_ranges:
+            if not compGroup.append(cr):
                 groups.append(compGroup)
-                compGroup = CompGroupIndex(self, compRange)
+                compGroup = CompGroupIndex(self, cr)
         if len(compGroup) > 0:
             groups.append(compGroup)
+
         return groups
 
     def _fix_references(self):
