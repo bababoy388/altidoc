@@ -53,3 +53,11 @@ long title blocks are reduced to fit the available height.
 
 Title regressions: `python3 -m unittest discover -s test -p "test_stamp_title.py"`.
 Automatic, explicit and long-title element lists were compiled with LuaLaTeX.
+
+The element list and specification share grouped-designator expansion. CSV rows
+with lists or ranges are expanded before combining groups or calculating quantities.
+Reference type is part of the element-list grouping key; all individual designators
+are sorted before rendering ranges and continuation rows. The regression for
+`C22, C26` plus `C31, C34` requires all four designators and quantity 4.
+The complete RFID CSV was checked against both exports: 105 components, including
+31 capacitors, with no missing or extra designators.

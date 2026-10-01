@@ -7,6 +7,29 @@ from . import altiumbom, config
 
 REF_REGEXP = re.compile(r"([^0-9?]+)([0-9]+)")
 
+
+def expand_references(reference):
+    """Expand grouped CSV designators and ranges for both document types."""
+    references = []
+    pattern = re.compile(r'([A-Za-zА-Яа-я]+)(\d+)(?:\s*[-–—]\s*(?:\1)?(\d+))?\Z')
+    for token in re.split(r'[,;\n]', reference):
+        token = token.strip()
+        if not token:
+            continue
+        match = pattern.fullmatch(token)
+        if match and match.group(3):
+            prefix, first, last = match.groups()
+            first, last = sorted((int(first), int(last)))
+            if last - first > 10000:
+                raise ValueError('Слишком большой диапазон позиционных обозначений: ' + token)
+            references.extend(prefix + str(n) for n in range(first, last + 1))
+        else:
+            references.append(token)
+    if not references:
+        raise ValueError('Не указано позиционное обозначение компонента')
+    return references
+
+
 class Component():
     """Данные о компоненте схемы."""
 
@@ -584,10 +607,11 @@ class CompRangeIndex(Component):
         self._refRange = []
         self._refRangeFitted = []
         if comp is not None:
-            self._refRange.append(comp.reference)
+            references = expand_references(comp.reference)
+            self._refRange.extend(references)
             if comp.fitted:
-                self._refRangeFitted.append(comp.reference)
-            self.reference = comp.reference
+                self._refRangeFitted.extend(references)
+            self.reference = references[0]
             self.value = comp.value
             self.footprint = comp.footprint
             self.datasheet = comp.datasheet
@@ -627,9 +651,10 @@ class CompRangeIndex(Component):
             and self.getIndexValue("name") == comp.getIndexValue("name") \
             and self.getIndexValue("doc") == comp.getIndexValue("doc") \
             and self.getIndexValue("comment") == comp.getIndexValue("comment"):
-                self._refRange.append(comp.reference)
+                references = expand_references(comp.reference)
+                self._refRange.extend(references)
                 if comp.fitted:
-                    self._refRangeFitted.append(comp.reference)
+                    self._refRangeFitted.extend(references)
                 return True
         return False
 
@@ -755,27 +780,7 @@ class CompRangeSpec(Component):
             self.datasheet = comp.datasheet
             self.fields = comp.fields
 
-    @staticmethod
-    def _expand_references(reference):
-        """Count individual designators in grouped CSV rows, including ranges."""
-        references = []
-        pattern = re.compile(r'([A-Za-zА-Яа-я]+)(\d+)(?:\s*[-–—]\s*(?:\1)?(\d+))?\Z')
-        for token in re.split(r'[,;\n]', reference):
-            token = token.strip()
-            if not token:
-                continue
-            match = pattern.fullmatch(token)
-            if match and match.group(3):
-                prefix, first, last = match.groups()
-                first, last = sorted((int(first), int(last)))
-                if last - first > 10000:
-                    raise ValueError('Слишком большой диапазон позиционных обозначений: ' + token)
-                references.extend(prefix + str(n) for n in range(first, last + 1))
-            else:
-                references.append(token)
-        if not references:
-            raise ValueError('Не указано позиционное обозначение компонента')
-        return references
+    _expand_references = staticmethod(expand_references)
 
     def __iter__(self):
         for ref in self._refRange:
@@ -1604,8 +1609,9 @@ class Schematic():
         # Шаг 1. Группируем все компоненты по одинаковым параметрам
         groups_dict = {}
         for comp in self.components:
-            # Ключ: тип, наименование, документ, примечание
+            # Ключ: буквенная часть обозначения, тип, наименование, документ, примечание
             key = (
+                comp.getRefType(),
                 comp.getIndexValue("type"),
                 comp.getIndexValue("name"),
                 comp.getIndexValue("doc"),
