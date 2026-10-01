@@ -27,15 +27,19 @@ marks are combined with the name in the export, rather than placed in the
 “Обозначение” graph (4.2.17). UI data and other export formats are preserved.
 
 This controls presentation. It does not validate BOM quantities, procurement
-references, section classification, drawing identifiers or signatures. The source
-specification's L1/L2/L3 entry has quantity 1; this value was preserved for review.
+references, section classification, drawing identifiers or signatures.
+Specification grouping compares the purchasing mark as well as the name, type,
+document and comment. Grouped CSV designators are expanded before counting,
+so L1/L2/L3 has quantity 3, and different component marks remain separate positions.
 
 Sources:
 - https://protect.gost.ru/gost/details/a65c2b20-2cfb-4326-abd5-3aad62db747c
 - https://meganorm.ru/Data/708/70838.pdf (2024 edition with Amendment 1)
 - https://files.stroyinf.ru/Data/816/81679.pdf
 
-Validation: `python3 -m unittest discover -s test -p test_spec_latex.py`.
+Validation: `python3 -m unittest discover -s test -p 'test_spec*.py'`.
+The grouped-CSV regression fixture checks every mark, designator and quantity
+against the full generated specification, including 9 capacitor and 5 resistor positions.
 The reference two-sheet specification and a six-sheet stress sample were compiled
 with LuaLaTeX, rendered for visual review, and checked for graph coordinates and
 text staying within ruled rows/columns. The element-list export was also compiled.
