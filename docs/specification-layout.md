@@ -61,3 +61,13 @@ are sorted before rendering ranges and continuation rows. The regression for
 `C22, C26` plus `C31, C34` requires all four designators and quantity 4.
 The complete RFID CSV was checked against both exports: 105 components, including
 31 capacitors, with no missing or extra designators.
+
+Purchasing-mark priority is shared by the specification and element list:
+`Part Number` → `PartNumber` → `Comment`. Missing columns, blank/whitespace values
+and Altium’s `~` placeholder fall through to the next field. The default
+specification `number = Comment` mapping resolves this selected mark, which is
+rendered in the PDF Name graph; a separately configured designation and filled
+descriptive name are preserved. Grouping uses the selected mark too, so different
+part numbers with the same Comment remain separate.
+Validation includes fallback cases, grouping, PDF Name cells and the full RFID CSV
+(105 components with matching selected marks in both tables).

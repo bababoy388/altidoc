@@ -356,6 +356,14 @@ class Component():
             return False
         return out
 
+    def getPartNumber(self):
+        """Choose the first nonempty purchasing mark in the CSV priority order."""
+        for field in ("Part Number", "PartNumber", "Comment"):
+            value = self.getFieldValue(field)
+            if value and value.strip() and value.strip() != '~':
+                return value.strip()
+        return ""
+
     def getIndexValue(self, name, singular=False, plural=False):
         """Вернуть преобразованное значение для перечня.
 
@@ -387,14 +395,7 @@ class Component():
                 value = self.value
 
         if name == "name":
-            # Попробуем получить PartNumber
-            partnumber = self.getFieldValue("PartNumber")
-            if partnumber:
-                value = partnumber
-            else:
-                # Если PartNumber пуст, берём Comment
-                comment = self.getFieldValue("Comment")
-                value = comment if comment else ""
+            value = self.getPartNumber()
 
         if value is None:
             value = ""
@@ -429,6 +430,10 @@ class Component():
                 value = self.getValueWithUnits()
             else:
                 value = self.value
+        if name == "number" and fieldName == "Comment":
+            # The default CSV purchasing mark is rendered in the PDF Name graph.
+            # Preserve separately configured designations and descriptive names.
+            value = self.getPartNumber()
         if value is None:
             value = ""
         return value
