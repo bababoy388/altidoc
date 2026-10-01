@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, glob, sys, shutil, argparse, string, csv, time
+import os, glob, sys, shutil, argparse, string, csv, time, subprocess
 from core import config, index, spec, bom, sds, sds2, stamp, output
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
 from queue import Queue
@@ -394,8 +394,16 @@ class MainWin(QtWidgets.QMainWindow):
             doc = self.lookup[self.tabWidget.tabText(self.tabWidget.currentIndex())]
             table = self.readTable(self.tables[doc])
             stamp_dict = self.readStamp(self.stamps[doc])
-            self.export(path, table, stamp_dict)
+            try:
+                self.export(path, table, stamp_dict)
+            except Exception as error:
+                error_text = 'Не удалось записать файл "%s": %s' % (path, error)
+                self.append_log(error_text, 'ERROR')
+                self.statusbar.showMessage(error_text)
+                QtWidgets.QMessageBox.critical(self, 'Ошибка сохранения', error_text)
+                return
             self.statusbar.showMessage('Записан файл "%s"' % path)
+            self.append_log('Файл успешно записан: %s' % path, 'SUCCESS')
 
     def slotSaveAll(self):
         number = self.readStamp(self.stamps['spec'])['number']
@@ -403,7 +411,6 @@ class MainWin(QtWidgets.QMainWindow):
         sys.stdout.flush()
         if path:
             ext = self.extention
-            os.chdir(path)
             numpdf = sum(1 for v in self.export_ext.values() if v == 'pdf') * 2
             if numpdf > 0:
                 progress = QtWidgets.QProgressDialog(None, None, 0, numpdf, self)
@@ -414,20 +421,31 @@ class MainWin(QtWidgets.QMainWindow):
                 QtWidgets.QApplication.processEvents()
             else:
                 progress = None
-            for tableWidget, stampWidget, extention in zip(self.tables.values(), self.stamps.values(), self.export_ext.values()):
-                self.extention = extention
-                table = self.readTable(tableWidget)
-                stamp_dict = self.readStamp(stampWidget)
-                self.export(stamp_dict['number'] + '.' + extention, table, stamp_dict, progress)
-            if progress:
-                progress.close()
-            self.extention = ext
+            try:
+                os.chdir(path)
+                for tableWidget, stampWidget, extention in zip(self.tables.values(), self.stamps.values(), self.export_ext.values()):
+                    self.extention = extention
+                    table = self.readTable(tableWidget)
+                    stamp_dict = self.readStamp(stampWidget)
+                    self.export(stamp_dict['number'] + '.' + extention, table, stamp_dict, progress)
+            except Exception as error:
+                error_text = 'Не удалось записать файлы в "%s": %s' % (path, error)
+                self.append_log(error_text, 'ERROR')
+                self.statusbar.showMessage(error_text)
+                QtWidgets.QMessageBox.critical(self, 'Ошибка сохранения', error_text)
+                return
+            finally:
+                if progress:
+                    progress.close()
+                self.extention = ext
             self.statusbar.showMessage('Записаны файлы "%s"' % path)
+            self.append_log('Файлы успешно записаны: %s' % path, 'SUCCESS')
 
     def export(self, path, table, stamp_dict, progressDialog=None):
         if self.extention == 'tex':
             output.latex(table, stamp_dict, path)
         elif self.extention == 'pdf':
+            owns_progress = progressDialog is None
             if progressDialog is None:
                 progress = QtWidgets.QProgressDialog(None, None, 0, 2, self)
                 progress.setWindowTitle("Экспорт")
@@ -439,14 +457,36 @@ class MainWin(QtWidgets.QMainWindow):
                 progress = progressDialog
 
             path_tex = path[:-3] + 'tex'
-            output.latex(table, stamp_dict, path_tex)
+            try:
+                output.latex(table, stamp_dict, path_tex)
 
-            os.system('lualatex -interaction=nonstopmode "%s"' % path_tex)
-            progress.setValue(progress.value() + 1)
-            QtWidgets.QApplication.processEvents()
-            os.system('lualatex -interaction=nonstopmode "%s"' % path_tex)
-            progress.setValue(progress.value() + 1)
-            QtWidgets.QApplication.processEvents()
+                lualatex = shutil.which('lualatex')
+                macos_lualatex = '/Library/TeX/texbin/lualatex'
+                if not lualatex and os.path.isfile(macos_lualatex):
+                    lualatex = macos_lualatex
+                if not lualatex:
+                    raise RuntimeError('LuaLaTeX не найден. Перезапустите Terminal после установки BasicTeX.')
+
+                work_dir = os.path.dirname(os.path.abspath(path_tex))
+                tex_name = os.path.basename(path_tex)
+                for _ in range(2):
+                    result = subprocess.run(
+                        [lualatex, '-interaction=nonstopmode', '-halt-on-error', tex_name],
+                        cwd=work_dir,
+                        capture_output=True,
+                        text=True
+                    )
+                    progress.setValue(progress.value() + 1)
+                    QtWidgets.QApplication.processEvents()
+                    if result.returncode != 0:
+                        details = (result.stdout + '\n' + result.stderr).strip().splitlines()
+                        raise RuntimeError('Ошибка LuaLaTeX:\n' + '\n'.join(details[-12:]))
+
+                if not os.path.isfile(path):
+                    raise RuntimeError('LuaLaTeX завершился без создания PDF-файла.')
+            finally:
+                if owns_progress:
+                    progress.close()
 
             self.rm('*.aux')
             self.rm('*.log')
@@ -454,8 +494,6 @@ class MainWin(QtWidgets.QMainWindow):
             self.rm('*-converted-to.pdf')
             self.rm(path_tex)
 
-            if progressDialog is None:
-                progress.close()
         elif self.extention == 'xls':
             output.xls(table, stamp_dict, path)
         elif self.extention == 'csv':
