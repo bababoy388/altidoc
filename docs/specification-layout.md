@@ -1,0 +1,41 @@
+# PDF/LaTeX specification layout
+
+Specification export uses `core/spec_latex.py` and `template/specification.tex`.
+Other document types retain `template/template.tex`.
+
+The form follows GOST R 2.106-2019, Amendment 1, Appendix A (forms 1/1a),
+and GOST R 2.104-2023, Appendix B (title blocks 2/2a).
+
+- A4 portrait; frame at x=20/205 mm and y=5/292 mm.
+- Graph widths: 6, 6, 8, 70, 63, 10, 22 mm; total 185 mm.
+- Header height: 15 mm. Physical rows: 8 mm (last subsequent-sheet row: 9 mm).
+- First sheet: 29 rows above the 40 mm title block.
+- Subsequent sheets: 32 rows above the 15 mm title block.
+- Main lines: 0.5 mm; thin lines: 0.25 mm.
+- Bundled GOST_A font: 10.5 pt, approximately 2.5 mm capital height.
+- Additional graphs 19–23: 5/7 mm wide; heights 25/35/25/25/35 mm.
+- Graph 25 is printed when first-usage data is provided. Revision graphs remain empty.
+
+Notes list at most three actual designators per physical row; ranges are expanded.
+Very long designators may require fewer than three. Position and total quantity
+are written once; continuation rows hold only the remaining text. Text is wrapped
+using bundled TrueType font advances, with allowance for LaTeX math glyphs.
+Headings stay with their following entries when the group fits a sheet.
+
+In sections “Прочие изделия”, “Стандартные изделия”, and “Материалы”, purchasing
+marks are combined with the name in the export, rather than placed in the
+“Обозначение” graph (4.2.17). UI data and other export formats are preserved.
+
+This controls presentation. It does not validate BOM quantities, procurement
+references, section classification, drawing identifiers or signatures. The source
+specification's L1/L2/L3 entry has quantity 1; this value was preserved for review.
+
+Sources:
+- https://protect.gost.ru/gost/details/a65c2b20-2cfb-4326-abd5-3aad62db747c
+- https://meganorm.ru/Data/708/70838.pdf (2024 edition with Amendment 1)
+- https://files.stroyinf.ru/Data/816/81679.pdf
+
+Validation: `python3 -m unittest discover -s test -p test_spec_latex.py`.
+The reference two-sheet specification and a six-sheet stress sample were compiled
+with LuaLaTeX, rendered for visual review, and checked for graph coordinates and
+text staying within ruled rows/columns. The element-list export was also compiled.

@@ -2,7 +2,7 @@ import os, sys, string
 import csv as CSV
 #import xlrd, xlwt, xlutils
 #from xlutils.copy import copy
-from . import config
+from . import config, spec_latex
 from copy import deepcopy
 
 lookup = {
@@ -89,6 +89,9 @@ stamp_lookup = {
 def latex(table, stamp, output):
     
     if stamp['type'] == 'SDS Компэл':
+        return
+    if stamp['type'] == '':
+        spec_latex.write(table, stamp, output, config.get('output', 'template_path'))
         return
     
     def replace_latex_specchar(text):

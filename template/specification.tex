@@ -1,0 +1,151 @@
+% Specification: GOST R 2.106-2019 (Amendment 1), forms 1/1a.
+% Title blocks: GOST R 2.104-2023, forms 2/2a. Coordinates in millimetres.
+\documentclass[a4paper]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{russian}
+\setmainfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF,BoldFont=GOST_A.TTF,BoldItalicFont=GOST_A.TTF]
+\newfontfamily\cyrillicfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF]
+\usepackage{graphicx}
+\usepackage[normalem]{ulem}
+\usepackage{eso-pic}
+\usepackage[margin=0mm]{geometry}
+\pagestyle{empty}
+\setlength{\unitlength}{1mm}
+\setlength{\parindent}{0pt}
+\newcommand{\SpecFont}{\fontsize{10.5}{12}\selectfont}
+\newcommand{\SpecSmall}{\fontsize{9}{10}\selectfont}
+\newcommand{\SpecLarge}{\fontsize{14.6}{16}\selectfont}
+\newcommand{\HLine}[3]{\put(#1,#2){\line(1,0){#3}}}
+\newcommand{\VLine}[3]{\put(#1,#2){\line(0,1){#3}}}
+% Centre text vertically; horizontal padding is 1.3 mm on both sides.
+\newlength{\SpecPadding}
+\newcommand{\SpecCell}[5]{%
+  \ifdim #3mm<11mm\setlength{\SpecPadding}{1mm}\else\setlength{\SpecPadding}{2.6mm}\fi
+  \put(\dimexpr #1mm + #3mm/2\relax,#2){\makebox(0,0){%
+    \parbox[c]{\dimexpr #3mm - \SpecPadding\relax}{\SpecFont
+      \if l#4\raggedright\else\centering\fi #5\par}}}}
+\newcommand{\StampCell}[6]{%
+  \put(\dimexpr #1mm + #3mm/2\relax,\dimexpr #2mm + #4mm/2\relax){%
+    \makebox(0,0){\parbox[c]{\dimexpr #3mm - 1mm\relax}{\centering #5 #6\par}}}}
+\newcommand{\VerticalCell}[4]{%
+  \put(#1,#2){\makebox(0,0){\rotatebox{90}{#3 #4}}}}
+
+\newcommand{\Supplementary}{%
+  % Mandatory additional graphs 19--23: widths 5/7, heights 25/35/25/25/35.
+  \linethickness{0.5mm}
+  \VLine{8}{5}{145}\VLine{20}{5}{145}\HLine{8}{5}{12}\HLine{8}{150}{12}
+  \linethickness{0.25mm}
+  \VLine{13}{5}{145}
+  \HLine{8}{30}{12}\HLine{8}{65}{12}\HLine{8}{90}{12}\HLine{8}{115}{12}
+  \VerticalCell{10.5}{17.5}{\SpecFont}{Инв. № подл.}
+  \VerticalCell{10.5}{47.5}{\SpecFont}{Подп. и дата}
+  \VerticalCell{10.5}{77.5}{\SpecFont}{Взам. инв. №}
+  \VerticalCell{10.5}{102.5}{\SpecFont}{Инв. № дубл.}
+  \VerticalCell{10.5}{132.5}{\SpecFont}{Подп. и дата}
+}
+\newcommand{\FirstUsage}{%
+  \if\relax\detokenize{${FirstUsage}}\relax\else
+    % Optional graph 25 is printed when first-usage data is present.
+    \linethickness{0.25mm}
+    \VLine{8}{172}{60}\VLine{13}{172}{60}\VLine{20}{172}{60}
+    \HLine{8}{172}{12}\HLine{8}{232}{12}
+    \VerticalCell{10.5}{202}{\SpecFont}{Перв. примен.}
+    \VerticalCell{16.5}{202}{\SpecFont}{${FirstUsage}}
+  \fi
+}
+
+\newcommand{\ChangeGrid}[1]{%
+  \linethickness{0.5mm}
+  \VLine{85}{5}{#1}
+  \linethickness{0.25mm}
+  \VLine{27}{\the\numexpr#1-10\relax}{15}
+  \VLine{37}{5}{#1}\VLine{60}{5}{#1}\VLine{75}{5}{#1}
+  \HLine{20}{\dimexpr #1mm\relax}{65}
+  \HLine{20}{\dimexpr #1mm-5mm\relax}{65}
+  \StampCell{20}{\the\numexpr#1-10\relax}{7}{5}{\SpecSmall}{Изм.}
+  \StampCell{27}{\the\numexpr#1-10\relax}{10}{5}{\SpecSmall}{Лист}
+  \StampCell{37}{\the\numexpr#1-10\relax}{23}{5}{\SpecSmall}{№ докум.}
+  \StampCell{60}{\the\numexpr#1-10\relax}{15}{5}{\SpecSmall}{Подп.}
+  \StampCell{75}{\the\numexpr#1-10\relax}{10}{5}{\SpecSmall}{Дата}
+}
+\newcommand{\FirstStamp}[1]{%
+  \linethickness{0.5mm}
+  \HLine{20}{45}{185}\HLine{20}{30}{185}
+  \VLine{155}{5}{25}\HLine{155}{20}{50}
+  \VLine{195}{30}{15}
+  \linethickness{0.25mm}
+  \HLine{20}{10}{65}\HLine{20}{15}{65}\HLine{20}{20}{65}\HLine{20}{25}{65}
+  \VLine{170}{20}{10}\VLine{185}{20}{10}
+  \HLine{155}{25}{50}\HLine{195}{40}{10}
+  \VLine{160}{20}{5}\VLine{165}{20}{5}
+  \ChangeGrid{40}
+  \StampCell{20}{25}{17}{5}{\SpecFont}{Разраб.}
+  \StampCell{37}{25}{23}{5}{\SpecFont}{${Author}}
+  \StampCell{20}{20}{17}{5}{\SpecFont}{Пров.}
+  \StampCell{37}{20}{23}{5}{\SpecFont}{${Checker}}
+  \StampCell{20}{10}{17}{5}{\SpecFont}{Н. контр.}
+  \StampCell{37}{10}{23}{5}{\SpecFont}{${Normcontr}}
+  \StampCell{20}{5}{17}{5}{\SpecFont}{Утв.}
+  \StampCell{37}{5}{23}{5}{\SpecFont}{${Approver}}
+  \StampCell{85}{30}{110}{15}{\SpecLarge}{${DocumentNumber}}
+  \StampCell{195}{40}{10}{5}{\SpecFont}{Вер.}
+  \StampCell{85}{5}{70}{25}{\SpecLarge}{${Title}}
+  \StampCell{155}{25}{15}{5}{\SpecFont}{Лит.}
+  \StampCell{170}{25}{15}{5}{\SpecFont}{Лист}
+  \StampCell{185}{25}{20}{5}{\SpecFont}{Листов}
+  \StampCell{170}{20}{15}{5}{\SpecFont}{#1}
+  \StampCell{185}{20}{20}{5}{\SpecFont}{${Sheets}}
+  \StampCell{155}{5}{50}{15}{\SpecFont}{${Organization}}
+  \FirstUsage
+}
+\newcommand{\NextStamp}[1]{%
+  \linethickness{0.5mm}
+  \HLine{20}{20}{185}\VLine{185}{5}{15}\VLine{195}{5}{15}
+  \linethickness{0.25mm}
+  \HLine{185}{15}{20}
+  \ChangeGrid{15}
+  \StampCell{85}{5}{100}{15}{\SpecLarge}{${DocumentNumber}}
+  \StampCell{185}{15}{10}{5}{\SpecFont}{Вер.}
+  \StampCell{195}{15}{10}{5}{\SpecFont}{Лист}
+  \StampCell{195}{5}{10}{10}{\SpecFont}{#1}
+}
+
+\newcount\SpecIndex
+\newcommand{\SpecGrid}[2]{%
+  \linethickness{0.5mm}
+  \HLine{20}{5}{185}\HLine{20}{292}{185}
+  \VLine{20}{5}{287}\VLine{205}{5}{287}
+  \HLine{20}{277}{185}
+  \ifnum #1=1\def\SpecBottom{45}\else\def\SpecBottom{20}\fi
+  \VLine{26}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \VLine{32}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \VLine{40}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \VLine{110}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \VLine{173}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \VLine{183}{\SpecBottom}{\dimexpr 292mm-\SpecBottom mm\relax}
+  \linethickness{0.25mm}
+  \SpecIndex=1
+  \loop\ifnum\SpecIndex<#2
+    \HLine{20}{\dimexpr 277mm-8mm*\SpecIndex\relax}{185}
+    \advance\SpecIndex by 1
+  \repeat
+  \VerticalCell{23}{284.5}{\SpecFont}{Формат}
+  \VerticalCell{29}{284.5}{\SpecFont}{Зона}
+  \VerticalCell{36}{284.5}{\SpecFont}{Поз.}
+  \SpecCell{40}{284.5}{70}{c}{Обозначение}
+  \SpecCell{110}{284.5}{63}{c}{Наименование}
+  \VerticalCell{178}{284.5}{\SpecFont}{Кол.}
+  \SpecCell{183}{284.5}{22}{c}{Приме-\\чание}
+  \Supplementary
+  \ifnum #1=1\FirstStamp{#1}\else\NextStamp{#1}\fi
+  \StampCell{20}{0}{135}{5}{\SpecSmall}{Копировал}
+  \StampCell{155}{0}{50}{5}{\SpecSmall}{Формат А4}
+}
+\newcommand{\SpecPage}[3]{%
+  \AddToShipoutPictureBG*{\put(0,0){\setlength{\unitlength}{1mm}\begin{picture}(210,297)
+    \SpecGrid{#1}{#2}#3
+  \end{picture}}}\null}
+\begin{document}
+${Content}
+\end{document}
