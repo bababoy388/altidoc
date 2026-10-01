@@ -96,7 +96,7 @@ def latex(table, stamp, output):
                    .replace('_', '\\_')\
                    .replace('±', '$\\pm$')\
                    .replace('×', '$\\times$')\
-                   .replace('"', '\\textquotedbl')\
+                   .replace('"', '\\textquotedbl{}')\
                    .replace('«', '<<')\
                    .replace('»', '>>')
 
