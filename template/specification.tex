@@ -4,8 +4,8 @@
 \usepackage{fontspec}
 \usepackage{polyglossia}
 \setdefaultlanguage{russian}
-\setmainfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF,BoldFont=GOST_A.TTF,BoldItalicFont=GOST_A.TTF]
-\newfontfamily\cyrillicfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF]
+\setmainfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF,BoldFont=GOST_A.TTF,BoldItalicFont=GOST_A.TTF,ItalicFeatures={FakeSlant=0.15}]
+\newfontfamily\cyrillicfont{GOST_A.TTF}[Path=${TemplatePath},UprightFont=GOST_A.TTF,ItalicFont=GOST_A.TTF,ItalicFeatures={FakeSlant=0.15}]
 \usepackage{graphicx}
 \usepackage[normalem]{ulem}
 \usepackage{eso-pic}
@@ -13,9 +13,9 @@
 \pagestyle{empty}
 \setlength{\unitlength}{1mm}
 \setlength{\parindent}{0pt}
-\newcommand{\SpecFont}{\fontsize{10.5}{12}\selectfont}
-\newcommand{\SpecSmall}{\fontsize{9}{10}\selectfont}
-\newcommand{\SpecLarge}{\fontsize{14.6}{16}\selectfont}
+\newcommand{\SpecFont}{\itshape\fontsize{10.5}{12}\selectfont}
+\newcommand{\SpecSmall}{\itshape\fontsize{9}{10}\selectfont}
+\newcommand{\SpecLarge}{\itshape\fontsize{18}{22}\selectfont}
 \newcommand{\HLine}[3]{\put(#1,#2){\line(1,0){#3}}}
 \newcommand{\VLine}[3]{\put(#1,#2){\line(0,1){#3}}}
 % Centre text vertically; horizontal padding is 1.3 mm on both sides.
@@ -96,7 +96,7 @@
   \StampCell{185}{25}{20}{5}{\SpecFont}{Листов}
   \StampCell{170}{20}{15}{5}{\SpecFont}{#1}
   \StampCell{185}{20}{20}{5}{\SpecFont}{${Sheets}}
-  \StampCell{155}{5}{50}{15}{\SpecFont}{${Organization}}
+  \StampCell{155}{5}{50}{15}{\SpecLarge}{${Organization}}
   \FirstUsage
 }
 \newcommand{\NextStamp}[1]{%

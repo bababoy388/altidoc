@@ -217,9 +217,9 @@ def write(table, stamp, output, template_dir):
         return r'\\'.join(escape(line) for line in metrics.wrap(value, width, size))
     values = {
         'TemplatePath': directory.as_posix() + '/',
-        'DocumentNumber': escape(stamp['number']),
-        'Title': multiline(stamp['title'], 67.4, 14.6),
-        'Organization': multiline(stamp['company'], 47.4),
+        'DocumentNumber': multiline(stamp['number'], 97.4, 18),
+        'Title': multiline(stamp['title'], 67.4, 18),
+        'Organization': multiline(stamp['company'], 47.4, 18),
         'Author': multiline(stamp['developer'], 20.4),
         'Checker': multiline(stamp['verifier'], 20.4),
         'Normcontr': multiline(stamp['inspector'], 20.4),

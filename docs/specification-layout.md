@@ -12,7 +12,8 @@ and GOST R 2.104-2023, Appendix B (title blocks 2/2a).
 - First sheet: 29 rows above the 40 mm title block.
 - Subsequent sheets: 32 rows above the 15 mm title block.
 - Main lines: 0.5 mm; thin lines: 0.25 mm.
-- Bundled GOST_A font: 10.5 pt, approximately 2.5 mm capital height.
+- Bundled GOST_A font: 10.5 pt, approximately 2.5 mm capital height, with 0.15 slant.
+- Document number, product title and organization: 18 pt italic, matching the element list.
 - Additional graphs 19–23: 5/7 mm wide; heights 25/35/25/25/35 mm.
 - Graph 25 is printed when first-usage data is provided. Revision graphs remain empty.
 
