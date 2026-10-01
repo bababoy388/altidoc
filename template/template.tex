@@ -133,6 +133,8 @@
 \setlength{\extracolwidth}{10mm}
 \newlength{\mainwidth}
 
+\newsavebox{\ESKDtitlebox}
+
 % ===== ПОЛНЫЙ ШТАМП =====
 \newcommand{\fullstampblock}[1]{%
   \begingroup
@@ -169,10 +171,20 @@
     \rule{0pt}{3mm} & \rule{0pt}{3mm} &
     \multicolumn{5}{p{\cellFiveToNineWidth}|}{\multirow{5}{\cellFiveToNineWidth}{%
       \centering
-      \shortstack[c]{%
-        \fontsize{18}{22}\selectfont ${Title}\\[2mm]
-        \fontsize{11}{13}\selectfont ${Type}%
+      % Wrap to the graph width; bound the height for unusually long titles.
+      \sbox{\ESKDtitlebox}{%
+        \parbox{\dimexpr\cellFiveToNineWidth-2mm\relax}{%
+          \centering
+          \fontsize{18}{22}\selectfont ${Title}\par
+          \vspace{2mm}%
+          {\fontsize{11}{13}\selectfont ${Type}\par}%
+        }%
       }%
+      \ifdim\dimexpr\ht\ESKDtitlebox+\dp\ESKDtitlebox\relax>20mm
+        \resizebox*{!}{20mm}{\usebox{\ESKDtitlebox}}%
+      \else
+        \usebox{\ESKDtitlebox}%
+      \fi%
     }} &
     \multicolumn{3}{p{\cellTenWidth}|}{\centering\ESKDfontTabHeadSmall Лит.} &   % <-- убран | перед p
     \multicolumn{1}{p{\Xcol}|}{\centering\ESKDfontTabHeadSmall Лист} &

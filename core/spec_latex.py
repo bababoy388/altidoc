@@ -134,6 +134,11 @@ def note_lines(text, metrics):
     return lines or ['']
 
 
+def normalize_line_breaks(text):
+    """Accept both actual line breaks and the literal "\\n" entered in a GUI cell."""
+    return str(text).replace('\r\n', '\n').replace('\r', '\n').replace(r'\n', '\n')
+
+
 def escape(text):
     replacements = {'\\': r'\textbackslash{}', '&': r'\&', '%': r'\%', '$': r'\$',
                     '#': r'\#', '_': r'\_', '{': r'\{', '}': r'\}',
@@ -214,7 +219,7 @@ def write(table, stamp, output, template_dir):
         rendered.append(r'\SpecPage{%d}{%d}{%s}' % (number, FIRST_PAGE_ROWS if number == 1 else NEXT_PAGE_ROWS, '\n'.join(content)))
     template = string.Template((directory / 'specification.tex').read_text(encoding='utf8'))
     def multiline(value, width, size=BODY_PT):
-        return r'\\'.join(escape(line) for line in metrics.wrap(value, width, size))
+        return r'\\'.join(escape(line) for line in metrics.wrap(normalize_line_breaks(value), width, size))
     values = {
         'TemplatePath': directory.as_posix() + '/',
         'DocumentNumber': multiline(stamp['number'], 97.4, 18),

@@ -44,3 +44,12 @@ against the full generated specification, including 9 capacitor and 5 resistor p
 The reference two-sheet specification and a six-sheet stress sample were compiled
 with LuaLaTeX, rendered for visual review, and checked for graph coordinates and
 text staying within ruled rows/columns. The element-list export was also compiled.
+
+PDF title line breaks: enter the literal `\n` in the UI “Наименование” field,
+for example `Устройство\nинициирования`. Actual line breaks from CSV metadata
+are accepted too. Both the specification and element-list export support this.
+The element-list title block wraps automatically to its graph width; exceptionally
+long title blocks are reduced to fit the available height.
+
+Title regressions: `python3 -m unittest discover -s test -p "test_stamp_title.py"`.
+Automatic, explicit and long-title element lists were compiled with LuaLaTeX.

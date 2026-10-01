@@ -154,7 +154,8 @@ def latex(table, stamp, output):
     substitutions = {
         'Format': lookup[stamp['type']]['format'],
         'DocumentNumber': replace_latex_specchar(stamp['number']),
-        'Title': replace_latex_specchar(stamp['title']),
+        'Title': r'\\'.join(spec_latex.escape(line) for line in
+                            spec_latex.normalize_line_breaks(stamp['title']).split('\n')),
         'Type': stamp['type'] if stamp['type'] != 'Спецификация' else '',
         'Environment': table_env,
         'Author': replace_latex_specchar(stamp['developer']),
