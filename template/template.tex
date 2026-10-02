@@ -133,6 +133,8 @@
 \setlength{\extracolwidth}{10mm}
 \newlength{\mainwidth}
 
+\newsavebox{\ESKDtitlebox}
+
 % ===== ПОЛНЫЙ ШТАМП =====
 \newcommand{\fullstampblock}[1]{%
   \begingroup
@@ -169,10 +171,20 @@
     \rule{0pt}{3mm} & \rule{0pt}{3mm} &
     \multicolumn{5}{p{\cellFiveToNineWidth}|}{\multirow{5}{\cellFiveToNineWidth}{%
       \centering
-      \shortstack[c]{%
-        \fontsize{18}{22}\selectfont ${Title}\\[2mm]
-        \fontsize{11}{13}\selectfont ${Type}%
+      % Wrap to the graph width; bound the height for unusually long titles.
+      \sbox{\ESKDtitlebox}{%
+        \parbox{\dimexpr\cellFiveToNineWidth-2mm\relax}{%
+          \centering
+          \fontsize{18}{22}\selectfont ${Title}\par
+          \vspace{2mm}%
+          {\fontsize{11}{13}\selectfont ${Type}\par}%
+        }%
       }%
+      \ifdim\dimexpr\ht\ESKDtitlebox+\dp\ESKDtitlebox\relax>20mm
+        \resizebox*{!}{20mm}{\usebox{\ESKDtitlebox}}%
+      \else
+        \usebox{\ESKDtitlebox}%
+      \fi%
     }} &
     \multicolumn{3}{p{\cellTenWidth}|}{\centering\ESKDfontTabHeadSmall Лит.} &   % <-- убран | перед p
     \multicolumn{1}{p{\Xcol}|}{\centering\ESKDfontTabHeadSmall Лист} &
@@ -275,7 +287,6 @@
     \parbox[c][15mm][c]{5.4mm}{\centering\ESKDfontTabHead Кол.} &
     \parbox[c][15mm][c]{39.6mm}{\centering\ESKDfontTabHead Примечание} \\ \hline
     \endhead
-    \endfirstfoot
     \endfoot
     % \hline убрана, нижняя черта будет из последней строки данных
     \endlastfoot
@@ -286,6 +297,7 @@
 \newenvironment{ESKDspecification}{%
   \begin{longtable}{ |>{\centering\arraybackslash}m{4.5mm}
                       |>{\centering\arraybackslash}m{4.5mm}
+                      |>{\centering\arraybackslash}m{6.3mm}
                       |>{\raggedright\arraybackslash}m{62.1mm}
                       |>{\raggedright\arraybackslash}m{56.7mm}
                       |>{\centering\arraybackslash}m{8.1mm}
@@ -297,9 +309,8 @@
     \parbox[c][15mm][c]{62.1mm}{\centering\ESKDfontTabHead Обозначение} &
     \parbox[c][15mm][c]{56.7mm}{\centering\ESKDfontTabHead Наименование} &
     \parbox[c][15mm][c]{8.1mm}{\centering\begin{sideways}\ESKDfontTabHead Кол.\end{sideways}} &
-    \parbox[c][15mm][c]{18.9mm}{\centering\ESKDfontTabHead Примеч.\end{sideways}} \\ \hline
+    \parbox[c][15mm][c]{18.9mm}{\centering\ESKDfontTabHead Примеч.} \\ \hline
     \endhead
-    \endfirstfoot
     \endfoot
     % \hline убрана
     \endlastfoot
@@ -335,7 +346,6 @@
     \parbox[c][18mm][c]{13.5mm}{\centering\ESKDfontTabHead всего} &
     \\ \hline
     \endhead
-    \endfirstfoot
     \endfoot
     % \hline убрана
     \endlastfoot

@@ -2,7 +2,7 @@ import os, sys, string
 import csv as CSV
 #import xlrd, xlwt, xlutils
 #from xlutils.copy import copy
-from . import config
+from . import config, spec_latex
 from copy import deepcopy
 
 lookup = {
@@ -90,13 +90,16 @@ def latex(table, stamp, output):
     
     if stamp['type'] == 'SDS Компэл':
         return
+    if stamp['type'] == '':
+        spec_latex.write(table, stamp, output, config.get('output', 'template_path'))
+        return
     
     def replace_latex_specchar(text):
         return text.replace('%', '\\%')\
                    .replace('_', '\\_')\
                    .replace('±', '$\\pm$')\
                    .replace('×', '$\\times$')\
-                   .replace('"', '\\textquotedbl')\
+                   .replace('"', '\\textquotedbl{}')\
                    .replace('«', '<<')\
                    .replace('»', '>>')
 
@@ -151,7 +154,8 @@ def latex(table, stamp, output):
     substitutions = {
         'Format': lookup[stamp['type']]['format'],
         'DocumentNumber': replace_latex_specchar(stamp['number']),
-        'Title': replace_latex_specchar(stamp['title']),
+        'Title': r'\\'.join(spec_latex.escape(line) for line in
+                            spec_latex.normalize_line_breaks(stamp['title']).split('\n')),
         'Type': stamp['type'] if stamp['type'] != 'Спецификация' else '',
         'Environment': table_env,
         'Author': replace_latex_specchar(stamp['developer']),

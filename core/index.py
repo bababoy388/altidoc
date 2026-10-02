@@ -63,7 +63,8 @@ def build(netlist, auto_num=True):
     # Функция разбиения на чанки (не более 3 элементов)
     # --------------------------------------------------------------------
     def split_refs_to_chunks(comp_range, max_elements=3):
-        refs = list(comp_range)
+        refs = sorted(comp_range, key=lambda ref: (comp_range.getRefType(ref),
+                                                  comp_range.getRefNumber(ref)))
 
         if len(refs) == 1 and (',' in refs[0] or '-' in refs[0]):
             segments = _parse_ref_list(refs[0])
